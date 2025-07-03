@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from IPython.display import HTML, display
+
+# --- Moon data (scaled for visibility) ---
+moon_data = {
+    "Io": {"radius": 1, "period": 1.769},
+    "Callisto": {"radius": 4.5, "period": 16.689},
+    "Lysithea": {"radius": 10, "period": 259.20}
+}
+
+# --- Setup plot ---
+fig, ax = plt.subplots(figsize=(6, 6))
+ax.set_aspect('equal')
+ax.set_xlim(-12, 12)
+ax.set_ylim(-12, 12)
+ax.set_facecolor('black')
+ax.axis('off')  # Hide axes
+
+# --- Draw Jupiter ---
+ax.plot(0, 0, 'o', color='orange', markersize=12, label='Jupiter')
+
+# --- Initialize moons, trails, and labels ---
+moons = {}
+trails = {}
+labels = {}
+
+for name, data in moon_data.items():
+    moon_dot, = ax.plot([], [], 'o', label=name)  # moon itself
+    trail_line, = ax.plot([], [], '-', alpha=0.5, linewidth=1)  # orbit trail
+    moons[name] = moon_dot
+    trails[name] = {"line": trail_line, "x": [], "y": []}
+    labels[name] = ax.text(0, 0, name, color=moon_dot.get_color(), fontsize=9, ha='left', va='bottom')
+
+# --- Animation update function ---
+def update(frame):
+    t = frame / 5  # Simulated time in days
+
+    for name, data in moon_data.items():
+        r = data["radius"]
+        T = data["period"]
+        angle = 2 * np.pi * (t / T)
+        x = r * np.cos(angle)
+        y = r * np.sin(angle)
+
+        # Update moon position
+        moons[name].set_data([x], [y])
+
+        # Update label position with slight offset
+        labels[name].set_position((x + 0.2, y + 0.2))
+
+        # Update trail
+        trails[name]["x"].append(x)
+        trails[name]["y"].append(y)
+
+        # Limit trail length
+        max_len = 200
+        trails[name]["x"] = trails[name]["x"][-max_len:]
+        trails[name]["y"] = trails[name]["y"][-max_len:]
+
+        trails[name]["line"].set_data(trails[name]["x"], trails[name]["y"])
+
+    return [*moons.values(), *[t["line"] for t in trails.values()], *labels.values()]
+
+# --- Create animation ---
+ani = FuncAnimation(fig, update, frames=300, interval=50, blit=True)
+
+# --- Show animation in Jupyter ---
+display(HTML(ani.to_jshtml()))
