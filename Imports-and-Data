@@ -1,0 +1,99 @@
+# Import necessary programs for plotting, units, etc. 
+import numpy as np # numerical data
+import matplotlib.pyplot as plt # plotting
+import astropy.units as u # units
+import astroquery.jplhorizons as ast # good question!
+from astroquery import simbad # astronomy data
+
+pip install ads # different data set since SIMBAD doesn't have data
+
+import ads
+ads.config.token = "ujlslOrbgaCWsxmGJvjv1HTw4wdKw8osT72QoU4v"
+
+moon_queries = {
+    "Io": "Io AND Jupiter",
+    "Callisto": "Callisto AND Jupiter",
+    "Lysithea": "Lysithea AND Jupiter"
+}
+
+moon_papers = {}
+
+for moon, query in moon_queries.items():
+    papers = list(ads.SearchQuery(q=query, fl=['title', 'author', 'abstract', 'bibcode'],
+                                   sort="citation_count desc", max_pages=1))
+
+    moon_papers[moon] = papers
+
+    print(f"\n🌕 {moon} — Found {len(papers)} papers.")
+    for paper in papers[:3]:  # just a sample
+        print("\n🔸 Title:", paper.title[0])
+        print("📝 Authors:", paper.author[:3])
+        print("🔗 Bibcode:", paper.bibcode)
+        if paper.abstract:
+            print("📖 Abstract (short):", paper.abstract[:300], "...")
+        else:
+            print("📖 Abstract: Not available.")
+
+pip install openai
+
+# API setup
+from openai import OpenAI
+
+# Create a client
+client = OpenAI(api_key="seV97PY3ho8tVHVZ0AqUm6DnST9nhnUT3BlbkFJllq_h4tGe6sqOrNg9OzTJMz7wkLkVUkNrnfMtyIx4s4s9JRabPVt_4zSe9YNbob3ADF5z6QUQA")
+
+def summarize_moon_literature(moon_name, abstract_text):
+    prompt = f"""
+You are an astrophysics researcher. Write a clear, detailed literature review about the moon {moon_name}, based on the following scientific paper abstracts. 
+Include the major scientific findings, ongoing research questions, and any significant historical discoveries.
+
+Abstracts:
+{abstract_text}
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",  # This is the safe model
+        messages=[
+            {"role": "system", "content": "You are a helpful astrophysics researcher."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=1500
+    )
+
+    return response.choices[0].message.content
+
+with open("abstracts_io.txt", "w") as f:
+    f.write(abstracts_io)
+
+with open("abstracts_callisto.txt", "w") as f:
+    f.write(abstracts_callisto)
+
+with open("abstracts_lysithea.txt", "w") as f:
+    f.write(abstracts_lysithea)
+
+# Io #####
+# Semi-major axis: 421,700 km
+
+# Orbital period: 1.769 days
+
+# Eccentricity: 0.0041
+
+# Inclination: 0.036°
+
+# Callisto #######
+# Semi-major axis: 1,882,700 km
+
+# Orbital period: 16.689 days
+
+# Eccentricity: 0.0074
+
+# Inclination: 0.192°
+
+# Lysithea ########
+# Semi-major axis: 11,720,000 km
+
+# Orbital period: 259.20 days
+
+# Eccentricity: 0.11
+
